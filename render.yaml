@@ -1,7 +1,23 @@
-FROM node:20-slim
-WORKDIR /app
-COPY . .
-RUN npm run build
-ENV NODE_ENV=production
-# The host provides PORT; the server reads process.env.PORT.
-CMD ["npm", "start"]
+# Render blueprint. Push this repo to GitHub, then in Render:
+# New +  ->  Blueprint  ->  pick this repo. It reads this file.
+services:
+  - type: web
+    name: llave
+    runtime: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_KEY
+        generateValue: true
+      # Fill these in the Render dashboard after the first deploy:
+      - key: APP_URL
+        sync: false            # e.g. https://llave.onrender.com
+      - key: STRIPE_SECRET_KEY
+        sync: false            # sk_live_... or sk_test_...
+      - key: RESEND_API_KEY
+        sync: false            # re_...
+      - key: FROM_EMAIL
+        sync: false            # Llave <alerts@your-domain.com>
