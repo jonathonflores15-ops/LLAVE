@@ -383,6 +383,18 @@ async function runDigest() {
 // Automatic daily digest (fires only when there are new matching listings).
 setInterval(() => { runDigest().then((n) => n && console.log(`[digest] sent ${n} email(s)`)); }, 24 * 60 * 60 * 1000);
 
+// ---- SEO: sitemap + robots (must come before the SPA catch-all below) ----
+app.get("/robots.txt", (req, res) => {
+  res.type("text/plain").send(`User-agent: *\nAllow: /\nSitemap: ${APP_URL.replace(/\/$/, "")}/sitemap.xml\n`);
+});
+
+app.get("/sitemap.xml", (req, res) => {
+  const base = APP_URL.replace(/\/$/, "");
+  const paths = ["/", "/publicar", ...allListings().map((l) => `/propiedad/${encodeURIComponent(l.catastro)}`)];
+  const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${paths.map((p) => `  <url><loc>${base}${p}</loc></url>`).join("\n")}\n</urlset>`;
+  res.type("application/xml").send(body);
+});
+
 // ---- serve the built front end in production (one service, one URL) ----
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.join(__dirname, "..", "web", "dist");

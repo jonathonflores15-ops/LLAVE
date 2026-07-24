@@ -7,22 +7,51 @@ import Publish from "./Publish.jsx";
 import Admin from "./Admin.jsx";
 import { api, getToken, setToken } from "./api.js";
 
+function parsePath(pathname) {
+  if (pathname === "/admin") return { view: "admin" };
+  if (pathname === "/cuenta") return { view: "account" };
+  if (pathname === "/publicar") return { view: "publish" };
+  const m = pathname.match(/^\/propiedad\/([^/]+)\/?$/);
+  if (m) return { view: "report", catastro: decodeURIComponent(m[1]) };
+  return { view: "home" };
+}
+
+const initial = parsePath(window.location.pathname);
+if (window.location.hash === "#admin") initial.view = "admin"; // legacy bookmark support
+
 export default function App() {
   const [lang, setLang] = useState("es");
-  const [view, setView] = useState("home"); // home | report | account | publish | admin
-  const [catastro, setCatastro] = useState("040-088-201-05-012");
+  const [view, setView] = useState(initial.view);
+  const [catastro, setCatastro] = useState(initial.catastro || "040-088-201-05-012");
   const [user, setUser] = useState(null);
   const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
     if (getToken()) api.me().then((d) => setUser(d.user)).catch(() => setToken(null));
-    if (window.location.hash === "#admin") setView("admin");
+    if (window.location.hash === "#admin") history.replaceState(null, "", "/admin");
   }, []);
 
-  const open = (cat) => { setCatastro(cat); setView("report"); window.scrollTo(0, 0); };
-  const goHome = () => { setView("home"); window.scrollTo(0, 0); if (window.location.hash) history.replaceState(null, "", "/"); };
-  const goAccount = () => { setView("account"); window.scrollTo(0, 0); };
-  const goPublish = () => { setView("publish"); window.scrollTo(0, 0); };
+  useEffect(() => {
+    const onPop = () => {
+      const p = parsePath(window.location.pathname);
+      setView(p.view);
+      if (p.catastro) setCatastro(p.catastro);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  const go = (path, nextView, cat) => {
+    history.pushState(null, "", path);
+    setView(nextView);
+    if (cat) setCatastro(cat);
+    window.scrollTo(0, 0);
+  };
+
+  const open = (cat) => go(`/propiedad/${encodeURIComponent(cat)}`, "report", cat);
+  const goHome = () => go("/", "home");
+  const goAccount = () => go("/cuenta", "account");
+  const goPublish = () => go("/publicar", "publish");
   const logout = () => { setToken(null); setUser(null); goHome(); };
 
   const shared = { lang, setLang, user, setUser, onLogin: () => setAuthOpen(true), onLogout: logout };

@@ -107,6 +107,8 @@ export default function Report({ lang, setLang, user, setUser, onLogin, onLogout
       .then((p) => {
         if (!alive) return;
         setListing(p.listing); setPreview(p); setStatus("ok");
+        const l = p.listing;
+        document.title = `${l.type} en ${l.muni}${l.sector ? " · " + l.sector : ""} — Llave`;
         return api.report(catastro, getAccess(catastro) || undefined)
           .then((rep) => { if (alive) { setFull(rep); setUnlocked(true); } })
           .catch(() => {});

@@ -222,6 +222,8 @@ export default function Home({ lang, setLang, user, onLogin, onLogout, onOpen, o
   const [minBeds, setMinBeds] = useState(0);
   const [allMunis, setAllMunis] = useState([]);
 
+  useEffect(() => { document.title = "Llave — Puerto Rico"; }, []);
+
   useEffect(() => {
     api.listings({}).then((d) => setAllMunis([...new Set(d.listings.map((l) => l.muni))].sort())).catch(() => {});
   }, []);
