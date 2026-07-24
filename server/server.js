@@ -266,6 +266,16 @@ app.post("/api/admin/listings", async (req, res) => {
   res.json({ ok: true, listing, notified });
 });
 
+// Admin: remove a listing that was added via admin/listings or an approved submission
+// (property sold/rented/rented out, or was added by mistake).
+app.delete("/api/admin/listings/:id", (req, res) => {
+  if ((req.query.adminKey || req.get("x-admin-key")) !== ADMIN_KEY) return res.status(401).json({ error: "bad_admin_key" });
+  const idx = db.extraListings.findIndex((l) => l.id === req.params.id);
+  if (idx < 0) return res.status(404).json({ error: "listing_not_found" });
+  db.extraListings.splice(idx, 1); db.save();
+  res.json({ ok: true });
+});
+
 // Admin: list pending owner-submitted listings awaiting review.
 app.get("/api/admin/submissions", (req, res) => {
   if ((req.query.adminKey || req.get("x-admin-key")) !== ADMIN_KEY) return res.status(401).json({ error: "bad_admin_key" });
