@@ -97,6 +97,21 @@ No code changes needed beyond this — `server/db.js` automatically switches fro
 to Postgres whenever `DATABASE_URL` is set, and everything else in the app (accounts, orders,
 subscribers, listings, submissions) keeps working exactly the same.
 
+## Step 7 — Turn on the AI search assistant
+A small chat widget (bottom-right corner of the home page) helps visitors narrow down what
+they're looking for and answers short questions about how Llave works. Without an API key it
+shows an "assistant isn't available" message instead of erroring.
+
+1. Get an API key at **https://console.anthropic.com** (Settings → API Keys).
+2. In Render → your service → **Environment**, add `ANTHROPIC_API_KEY`.
+3. Save, rebuild, and deploy. That's it — the widget starts working immediately.
+
+This calls Claude (`claude-opus-4-8` by default — override with an `ANTHROPIC_MODEL` env var,
+e.g. `claude-haiku-4-5` for a cheaper/faster option) once per visitor message, so it costs a
+small amount per use on your Anthropic account. There's a basic shared rate limit (20
+messages/minute across all visitors) as a safety net against runaway costs from abuse, but
+keep an eye on usage at console.anthropic.com if traffic picks up.
+
 ---
 
 ## Fire a test email alert (adds a listing → emails matching subscribers)

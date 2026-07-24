@@ -38,4 +38,5 @@ export const api = {
   adminApprove: (id, adminKey) => req("/admin/submissions/" + encodeURIComponent(id) + "/approve", { method: "POST", body: { adminKey } }),
   adminReject: (id, adminKey) => req("/admin/submissions/" + encodeURIComponent(id) + "/reject", { method: "POST", body: { adminKey } }),
   adminDeleteListing: (id, adminKey) => req("/admin/listings/" + encodeURIComponent(id) + "?adminKey=" + encodeURIComponent(adminKey), { method: "DELETE" }),
+  assistant: (message) => req("/assistant", { method: "POST", body: { message } }),
 };

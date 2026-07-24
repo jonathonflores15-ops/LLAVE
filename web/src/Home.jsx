@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { api } from "./api.js";
 import PropertiesMap from "./Map.jsx";
+import Assistant from "./Assistant.jsx";
 
 const REGISTRO = "https://ridpr.pr.gov";
 const CRIM = "https://www.crimpr.net";
@@ -55,6 +56,16 @@ function priceBands(lang, kind) {
   return lang === "es"
     ? [["", na], ["0-200000", "Hasta $200K"], ["200000-500000", "$200K – $500K"], ["500000-1000000", "$500K – $1M"], ["1000000-", "$1M+"]]
     : [["", na], ["0-200000", "Up to $200K"], ["200000-500000", "$200K – $500K"], ["500000-1000000", "$500K – $1M"], ["1000000-", "$1M+"]];
+}
+
+function snapToBand(maxPrice, kind, lang) {
+  if (maxPrice == null) return "";
+  const bands = priceBands(lang, kind).map(([v]) => v).filter(Boolean);
+  for (const b of bands) {
+    const max = b.split("-")[1];
+    if (maxPrice <= (max ? Number(max) : Infinity)) return b;
+  }
+  return bands[bands.length - 1] || "";
 }
 
 function matchesBand(item, band, kind) {
@@ -231,6 +242,16 @@ export default function Home({ lang, setLang, user, onLogin, onLogout, onOpen, o
 
   const applySearch = () => setQ(qInput.trim());
   const clearSearch = () => { setQ(""); setQInput(""); };
+
+  const applyAssistantFilters = (f) => {
+    if (!f) return;
+    const effectiveKind = f.kind || kind;
+    if (f.kind) setKind(f.kind);
+    if (f.use) setUse(f.use);
+    if (f.muni) setMuniFilter(f.muni);
+    if (f.minBeds != null) setMinBeds(f.minBeds);
+    if (f.maxPrice != null) setPriceBand(snapToBand(f.maxPrice, effectiveKind, lang));
+  };
 
   const tabs = [["rent", t.rent], ["sale", t.sale], ["auction", t.auction]];
   const uses = [["all", t.uAll], ["res", t.uRes], ["com", t.uCom]];
@@ -414,6 +435,8 @@ export default function Home({ lang, setLang, user, onLogin, onLogout, onOpen, o
 
         <p className="text-xs" style={{ color: C.sea, marginTop: 30, paddingTop: 16, borderTop: `1px solid ${C.seaLine}`, lineHeight: 1.6, maxWidth: 720 }}>{t.dataDisc}</p>
       </main>
+
+      <Assistant lang={lang} onApplyFilters={applyAssistantFilters} />
     </div>
   );
 }

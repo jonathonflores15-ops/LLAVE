@@ -23,3 +23,5 @@ services:
         sync: false            # re_...
       - key: FROM_EMAIL
         sync: false            # Llave <alerts@your-domain.com>
+      - key: ANTHROPIC_API_KEY
+        sync: false            # sk-ant-... — turns on the AI search assistant widget

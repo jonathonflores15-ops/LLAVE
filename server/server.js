@@ -12,6 +12,7 @@ import { hashPassword, verifyPassword, signToken, verifyToken, optionalUser } fr
 import { sendEmail, emailMode } from "./emailer.js";
 import { matches, listingsEmail, welcomeEmail } from "./notify.js";
 import { floodZone } from "./fema.js";
+import { askAssistant, assistantAvailable } from "./assistant.js";
 
 const PORT = process.env.PORT || 3001;
 const REPORT_PRICE_CENTS = 1900;
@@ -61,6 +62,36 @@ app.get("/api/listings/:id", (req, res) => {
   const l = findListing(req.params.id);
   if (!l) return res.status(404).json({ error: "listing_not_found" });
   res.json(l);
+});
+
+// ---- AI search assistant (helps visitors narrow down listings / ask questions) ----
+// Costs real money per call, so a simple shared-bucket rate limit guards against abuse
+// even though req.ip isn't reliably per-visitor behind Render's proxy.
+const ASSISTANT_RATE = { windowMs: 60_000, max: 20 };
+const assistantHits = new Map();
+function assistantRateLimited(key) {
+  const now = Date.now();
+  const hits = (assistantHits.get(key) || []).filter((t) => now - t < ASSISTANT_RATE.windowMs);
+  hits.push(now);
+  assistantHits.set(key, hits);
+  return hits.length > ASSISTANT_RATE.max;
+}
+
+app.post("/api/assistant", async (req, res) => {
+  if (!assistantAvailable()) return res.status(503).json({ error: "assistant_not_configured" });
+  const message = String(req.body.message || "").trim();
+  if (!message) return res.status(400).json({ error: "message_required" });
+  if (message.length > 500) return res.status(400).json({ error: "message_too_long" });
+  if (assistantRateLimited(req.ip || "shared")) return res.status(429).json({ error: "rate_limited" });
+  try {
+    const munis = [...new Set(allListings().map((l) => l.muni))].sort();
+    const result = await askAssistant(message, { munis });
+    if (!result) return res.status(503).json({ error: "assistant_not_configured" });
+    res.json(result);
+  } catch (e) {
+    console.error("Assistant error:", e.message);
+    res.status(502).json({ error: "assistant_error" });
+  }
 });
 
 // ---- public listing submissions (owners/agents publish their own property) ----
