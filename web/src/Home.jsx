@@ -23,7 +23,7 @@ const T = {
     publish: "Publicar propiedad",
     ph: "Municipio, sector o código postal", search: "Buscar", searchingFor: "Resultados para", clear: "Limpiar",
     rent: "Alquiler", sale: "En venta", auction: "Subasta", uAll: "Todos", uRes: "Residencial", uCom: "Comercial",
-    fMuni: "Municipio", fPrice: "Precio", fType: "Tipo", showing: "Mostrando", of: "de", results: "propiedades",
+    fMuni: "Municipio", fPrice: "Precio", fType: "Tipo", fBeds: "Habitaciones", anyMuni: "Todos los municipios", anyType: "Todos los tipos", showing: "Mostrando", of: "de", results: "propiedades",
     list: "Lista", map: "Mapa", perMo: "/mes", bid: "Puja inicial", cat: "Catastro", vTitle: "Título · Registro", vTax: "Contribuciones · CRIM",
     loading: "Cargando propiedades…", none: "No hay propiedades para esta búsqueda.",
     errTitle: "No se pudo conectar con el servidor", errBody: "Asegúrate de que el backend esté corriendo (carpeta server: npm start).",
@@ -35,7 +35,7 @@ const T = {
     publish: "List your property",
     ph: "Municipality, sector, or ZIP code", search: "Search", searchingFor: "Results for", clear: "Clear",
     rent: "Rentals", sale: "For sale", auction: "Auction", uAll: "All", uRes: "Residential", uCom: "Commercial",
-    fMuni: "Municipality", fPrice: "Price", fType: "Type", showing: "Showing", of: "of", results: "properties",
+    fMuni: "Municipality", fPrice: "Price", fType: "Type", fBeds: "Bedrooms", anyMuni: "All municipalities", anyType: "All types", showing: "Showing", of: "of", results: "properties",
     list: "List", map: "Map", perMo: "/mo", bid: "Starting bid", cat: "Cadastre", vTitle: "Title · Registry", vTax: "Taxes · CRIM",
     loading: "Loading properties…", none: "No properties for this search.",
     errTitle: "Couldn't reach the server", errBody: "Make sure the backend is running (server folder: npm start).",
@@ -45,7 +45,34 @@ const T = {
 
 const money = (n) => "$" + Number(n).toLocaleString("en-US");
 
-function Card({ item, t, onOpen }) {
+function priceBands(lang, kind) {
+  const na = lang === "es" ? "Cualquier precio" : "Any price";
+  if (kind === "rent") {
+    return lang === "es"
+      ? [["", na], ["0-1500", "Hasta $1,500"], ["1500-2500", "$1,500 – $2,500"], ["2500-4000", "$2,500 – $4,000"], ["4000-", "$4,000+"]]
+      : [["", na], ["0-1500", "Up to $1,500"], ["1500-2500", "$1,500 – $2,500"], ["2500-4000", "$2,500 – $4,000"], ["4000-", "$4,000+"]];
+  }
+  return lang === "es"
+    ? [["", na], ["0-200000", "Hasta $200K"], ["200000-500000", "$200K – $500K"], ["500000-1000000", "$500K – $1M"], ["1000000-", "$1M+"]]
+    : [["", na], ["0-200000", "Up to $200K"], ["200000-500000", "$200K – $500K"], ["500000-1000000", "$500K – $1M"], ["1000000-", "$1M+"]];
+}
+
+function matchesBand(item, band, kind) {
+  if (!band) return true;
+  const [minS, maxS] = band.split("-");
+  const min = Number(minS) || 0, max = maxS ? Number(maxS) : Infinity;
+  const val = kind === "auction" ? item.bid : item.price;
+  return val >= min && val <= max;
+}
+
+function freshness(createdAt, lang) {
+  if (!createdAt) return null;
+  const days = Math.floor((Date.now() - createdAt) / 86400000);
+  if (lang === "es") return days <= 0 ? "Publicado hoy" : days === 1 ? "Publicado ayer" : `Publicado hace ${days} días`;
+  return days <= 0 ? "Listed today" : days === 1 ? "Listed yesterday" : `Listed ${days} days ago`;
+}
+
+function Card({ item, t, lang, onOpen }) {
   const com = item.use === "com";
   const isAuction = item.kind === "auction";
   const badge = isAuction ? { label: t.auction, bg: C.coral, fg: "#fff" } : { label: item.kind === "rent" ? t.rent : t.sale, bg: "rgba(255,255,255,.92)", fg: C.teal };
@@ -81,7 +108,10 @@ function Card({ item, t, onOpen }) {
             {item.kind === "rent" && <span className="text-sm" style={{ color: C.sea, fontWeight: 600 }}>{t.perMo}</span>}
           </div>
         )}
-        <div className="text-sm" style={{ color: C.tealMid, fontWeight: 600, marginTop: 2 }}>{item.type}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2, flexWrap: "wrap" }}>
+          <span className="text-sm" style={{ color: C.tealMid, fontWeight: 600 }}>{item.type}</span>
+          {freshness(item.createdAt, lang) && <span className="text-xs" style={{ color: C.ok, fontWeight: 600 }}>· {freshness(item.createdAt, lang)}</span>}
+        </div>
         <div className="text-sm" style={{ display: "flex", flexWrap: "wrap", gap: 14, marginTop: 10 }}>
           {com ? (
             <>
@@ -116,15 +146,19 @@ function Card({ item, t, onOpen }) {
   );
 }
 
-function AlertsSignup({ lang, kind, use }) {
+function AlertsSignup({ lang, kind, use, initialMuni, initialMaxPrice }) {
   const S = {
-    es: { title: "Recibe nuevas propiedades por correo", sub: "Te avisamos automaticamente cuando aparezcan propiedades que coincidan con tu busqueda.", email: "tu@correo.com", muni: "Municipio (opcional)", price: "Precio max. (opcional)", btn: "Suscribirme", ok: "Listo! Te avisaremos por correo.", err: "Escribe un correo valido." },
-    en: { title: "Get new listings by email", sub: "We'll notify you automatically when properties matching your search show up.", email: "you@email.com", muni: "Municipality (optional)", price: "Max price (optional)", btn: "Subscribe", ok: "Done! We'll email you.", err: "Enter a valid email." },
+    es: { title: "Recibe nuevas propiedades por correo", sub: "Te avisamos automaticamente cuando aparezcan propiedades que coincidan con tu busqueda.", tiedTo: "Según tu búsqueda actual — puedes ajustarla.", email: "tu@correo.com", muni: "Municipio (opcional)", price: "Precio max. (opcional)", btn: "Suscribirme", ok: "Listo! Te avisaremos por correo.", err: "Escribe un correo valido." },
+    en: { title: "Get new listings by email", sub: "We'll notify you automatically when properties matching your search show up.", tiedTo: "Matched to your current search — feel free to adjust it.", email: "you@email.com", muni: "Municipality (optional)", price: "Max price (optional)", btn: "Subscribe", ok: "Done! We'll email you.", err: "Enter a valid email." },
   }[lang];
   const [email, setEmail] = useState("");
-  const [muni, setMuni] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+  const [muni, setMuni] = useState(initialMuni || "");
+  const [maxPrice, setMaxPrice] = useState(initialMaxPrice || "");
   const [state, setState] = useState("idle");
+
+  useEffect(() => { setMuni(initialMuni || ""); }, [initialMuni]);
+  useEffect(() => { setMaxPrice(initialMaxPrice || ""); }, [initialMaxPrice]);
+
   const submit = async () => {
     if (!/^\S+@\S+\.\S+$/.test(email)) { setState("err"); return; }
     setState("busy");
@@ -138,6 +172,9 @@ function AlertsSignup({ lang, kind, use }) {
         <Mail size={18} /><h3 className="text-base" style={{ fontWeight: 800, margin: 0 }}>{S.title}</h3>
       </div>
       <p className="text-sm" style={{ color: "rgba(255,255,255,.82)", marginTop: 6, maxWidth: 520 }}>{S.sub}</p>
+      {(initialMuni || initialMaxPrice) && state !== "ok" && (
+        <p className="text-xs" style={{ color: "#F3D9CF", marginTop: 4, fontWeight: 600 }}>{S.tiedTo}</p>
+      )}
       {state === "ok" ? (
         <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 8, background: "#DFF0E7", color: C.ok, fontWeight: 700, padding: "10px 14px", borderRadius: 10 }}>
           <Check size={16} /> {S.ok}
@@ -168,23 +205,43 @@ export default function Home({ lang, setLang, user, onLogin, onLogout, onOpen, o
   const [mode, setMode] = useState("list"); // list | map
   const [data, setData] = useState({ listings: [], total: 0, totals: { rent: 0, sale: 0, auction: 0 } });
   const [status, setStatus] = useState("loading");
+  const [muniFilter, setMuniFilter] = useState("");
+  const [priceBand, setPriceBand] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [minBeds, setMinBeds] = useState(0);
+  const [allMunis, setAllMunis] = useState([]);
+
+  useEffect(() => {
+    api.listings({}).then((d) => setAllMunis([...new Set(d.listings.map((l) => l.muni))].sort())).catch(() => {});
+  }, []);
 
   useEffect(() => {
     let alive = true;
     setStatus("loading");
     const params = { kind, use };
     if (q) params.q = q;
+    if (muniFilter) params.muni = muniFilter;
     api.listings(params)
       .then((d) => { if (alive) { setData(d); setStatus("ok"); } })
       .catch(() => { if (alive) setStatus("error"); });
     return () => { alive = false; };
-  }, [kind, use, q]);
+  }, [kind, use, q, muniFilter]);
+
+  useEffect(() => { setPriceBand(""); setTypeFilter(""); }, [kind]);
 
   const applySearch = () => setQ(qInput.trim());
   const clearSearch = () => { setQ(""); setQInput(""); };
 
   const tabs = [["rent", t.rent], ["sale", t.sale], ["auction", t.auction]];
   const uses = [["all", t.uAll], ["res", t.uRes], ["com", t.uCom]];
+
+  const typeOptions = [...new Set(data.listings.map((l) => l.type).filter(Boolean))].sort();
+  const visible = data.listings.filter((l) =>
+    matchesBand(l, priceBand, kind) &&
+    (!typeFilter || l.type === typeFilter) &&
+    (minBeds === 0 || (l.beds || 0) >= minBeds)
+  );
+  const bandMax = priceBand ? (priceBand.split("-")[1] || "") : "";
 
   return (
     <div style={{ minHeight: "100%", color: C.ink }}>
@@ -287,6 +344,38 @@ export default function Home({ lang, setLang, user, onLogin, onLogout, onOpen, o
           </div>
         </div>
 
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8, padding: "10px 0 4px" }}>
+          <div style={{ position: "relative" }}>
+            <select className="llv-select" value={muniFilter} onChange={(e) => setMuniFilter(e.target.value)}>
+              <option value="">{t.anyMuni}</option>
+              {allMunis.map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+            <ChevronDown size={14} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: C.sea, pointerEvents: "none" }} />
+          </div>
+          <div style={{ position: "relative" }}>
+            <select className="llv-select" value={priceBand} onChange={(e) => setPriceBand(e.target.value)}>
+              {priceBands(lang, kind).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+            <ChevronDown size={14} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: C.sea, pointerEvents: "none" }} />
+          </div>
+          <div style={{ position: "relative" }}>
+            <select className="llv-select" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+              <option value="">{t.anyType}</option>
+              {typeOptions.map((ty) => <option key={ty} value={ty}>{ty}</option>)}
+            </select>
+            <ChevronDown size={14} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: C.sea, pointerEvents: "none" }} />
+          </div>
+          {use !== "com" && (
+            <div style={{ position: "relative" }}>
+              <select className="llv-select" value={minBeds} onChange={(e) => setMinBeds(Number(e.target.value))}>
+                <option value={0}>{t.fBeds}</option>
+                {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n}+</option>)}
+              </select>
+              <ChevronDown size={14} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: C.sea, pointerEvents: "none" }} />
+            </div>
+          )}
+        </div>
+
         {q && (
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: C.sand, border: `1px solid ${C.sandDeep}`, borderRadius: 999, padding: "5px 12px", marginTop: 10 }}>
             <span className="text-sm" style={{ color: C.slate, fontWeight: 600 }}>{t.searchingFor} “{q}”</span>
@@ -296,7 +385,7 @@ export default function Home({ lang, setLang, user, onLogin, onLogout, onOpen, o
 
         {status === "ok" && (
           <div className="text-sm" style={{ color: C.sea, fontWeight: 600, padding: "10px 0 16px" }}>
-            {t.showing} <b style={{ color: C.ink }}>{data.listings.length}</b>{use === "all" && !q ? ` ${t.of} ${(data.total || 0).toLocaleString("en-US")}` : ""} {t.results}
+            {t.showing} <b style={{ color: C.ink }}>{visible.length}</b>{use === "all" && !q && !muniFilter && !priceBand && !typeFilter && !minBeds ? ` ${t.of} ${(data.total || 0).toLocaleString("en-US")}` : ""} {t.results}
           </div>
         )}
       </div>
@@ -309,19 +398,19 @@ export default function Home({ lang, setLang, user, onLogin, onLogout, onOpen, o
             <div className="text-sm" style={{ color: C.slate, marginTop: 4 }}>{t.errBody}</div>
           </div>
         )}
-        {status === "ok" && data.listings.length === 0 && (
+        {status === "ok" && visible.length === 0 && (
           <p style={{ color: C.sea, fontWeight: 600 }}>{t.none}</p>
         )}
-        {status === "ok" && data.listings.length > 0 && mode === "list" && (
+        {status === "ok" && visible.length > 0 && mode === "list" && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 300px), 1fr))", gap: 18 }}>
-            {data.listings.map((item) => <Card key={item.id} item={item} t={t} onOpen={onOpen} />)}
+            {visible.map((item) => <Card key={item.id} item={item} t={t} lang={lang} onOpen={onOpen} />)}
           </div>
         )}
-        {status === "ok" && data.listings.length > 0 && mode === "map" && (
-          <PropertiesMap listings={data.listings} onOpen={onOpen} height={480} lang={lang} />
+        {status === "ok" && visible.length > 0 && mode === "map" && (
+          <PropertiesMap listings={visible} onOpen={onOpen} height={480} lang={lang} />
         )}
 
-        <AlertsSignup lang={lang} kind={kind} use={use} />
+        <AlertsSignup lang={lang} kind={kind} use={use} initialMuni={muniFilter} initialMaxPrice={bandMax} />
 
         <p className="text-xs" style={{ color: C.sea, marginTop: 30, paddingTop: 16, borderTop: `1px solid ${C.seaLine}`, lineHeight: 1.6, maxWidth: 720 }}>{t.dataDisc}</p>
       </main>

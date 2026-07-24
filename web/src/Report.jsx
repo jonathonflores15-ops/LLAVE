@@ -19,6 +19,7 @@ const T = {
   es: { back: "Volver", res: "Residencial", com: "Comercial", rent: "Alquiler", sale: "En venta", auction: "Subasta",
     perMo: "/mes", loading: "Cargando…", errConn: "No se pudo conectar con el servidor.",
     freeTag: "Gratis", freeTitle: "Verificación pública", freeSub: "Número de catastro y enlaces oficiales — siempre gratis.",
+    teaserLabel: "Estimado de mercado",
     cat: "Catastro", vTitle: "Título · Registro", vTax: "Contribuciones · CRIM",
     reportTitle: "Informe de Propiedad", reportSub: "Todo el estudio de debida diligencia en un solo lugar.",
     includes: "Incluye", unlock: "Desbloquear informe", unlocked: "Informe desbloqueado", oneTime: "pago único",
@@ -32,6 +33,7 @@ const T = {
   en: { back: "Back", res: "Residential", com: "Commercial", rent: "Rentals", sale: "For sale", auction: "Auction",
     perMo: "/mo", loading: "Loading…", errConn: "Couldn't reach the server.",
     freeTag: "Free", freeTitle: "Public verification", freeSub: "Cadastral number and official links — always free.",
+    teaserLabel: "Market estimate",
     cat: "Cadastre", vTitle: "Title · Registry", vTax: "Taxes · CRIM",
     reportTitle: "Property Report", reportSub: "Your full due-diligence check in one place.",
     includes: "Includes", unlock: "Unlock report", unlocked: "Report unlocked", oneTime: "one-time",
@@ -241,6 +243,12 @@ export default function Report({ lang, setLang, user, setUser, onLogin, onLogout
             <a href="https://ridpr.pr.gov" target="_blank" rel="noopener noreferrer" className="chip-gov"><Landmark size={12} strokeWidth={2.2} /> {t.vTitle} <ArrowUpRight size={11} strokeWidth={2.4} /></a>
             <a href="https://www.crimpr.net" target="_blank" rel="noopener noreferrer" className="chip-gov"><Receipt size={12} strokeWidth={2.2} /> {t.vTax} <ArrowUpRight size={11} strokeWidth={2.4} /></a>
           </div>
+          {preview?.teaser && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, padding: "10px 12px", background: C.sand, borderRadius: 10 }}>
+              <TrendingUp size={14} strokeWidth={2.2} style={{ color: C.teal, flexShrink: 0 }} />
+              <span className="text-sm" style={{ color: C.slate }}>{t.teaserLabel}: <b style={{ color: C.ink, fontFamily: "ui-monospace, monospace" }}>{preview.teaser[lang]}</b></span>
+            </div>
+          )}
           <p className="text-xs" style={{ color: C.sea, marginTop: 12, lineHeight: 1.5 }}>{t.dataDisc}</p>
         </div>
 

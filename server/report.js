@@ -105,14 +105,19 @@ export function buildReport(l) {
 }
 
 // Locked preview: same sections/labels but no values, plus the "includes" checklist.
+// One real number is left unlocked -- the market estimate range -- as a free taste of what
+// the full report contains (title/liens/tax/flood stay locked).
 export function buildPreview(l) {
   const full = buildReport(l);
   const sections = full.sections.map((s) => ({
     icon: s.icon, es: s.es, en: s.en,
     rows: s.rows.map((r) => ({ es: [r.es[0]], en: [r.en[0]] })),
   }));
+  const valSec = full.sections.find((s) => s.icon === "TrendingUp");
+  const teaser = valSec && valSec.rows[0] ? { es: valSec.rows[0].es[1], en: valSec.rows[0].en[1] } : null;
   return {
     catastro: l.catastro,
+    teaser,
     includes: {
       es: ["Estado de título y titular inscrito", "Hipotecas, embargos y gravámenes", "Deuda y valor tasado (CRIM)", "Zona inundable e histórica", "Estimado de mercado y comparables"],
       en: ["Title status & owner of record", "Mortgages, liens & encumbrances", "Debt & assessed value (CRIM)", "Flood & historic zone", "Market estimate & comparables"],
