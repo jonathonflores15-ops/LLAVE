@@ -14,6 +14,14 @@ llave-fullstack/
 ```
 
 ## What's new in this version
+- **List your property** — a "Publicar propiedad" / "List your property" button (top right of
+  the home page) opens a public form for owners/agents to submit their own listing, with their
+  own photos (resized in the browser before upload). Submissions don't go live automatically —
+  they land in a moderation queue.
+- **Admin review page** — go to `<your-url>/#admin` and enter your `ADMIN_KEY` to see pending
+  submissions and Approve/Reject each one. Approving turns it into a real listing (with its
+  photos) and emails matching alert subscribers automatically. This page isn't linked anywhere
+  in the normal navigation — it's for you only, reached by typing the `#admin` URL.
 - **Map view** — a List / Map toggle on the home page plots the filtered properties on a map (free OpenStreetMap tiles, no API key). It **filters as you pan/zoom** — a badge shows how many properties are in the current view. Each property page shows its location too.
 - **ZIP-code search** — type a ZIP (or the first 3 digits for a whole area) in the search box to see only what's available around there. It also matches municipality / sector / catastro text.
 - **My Account page** — tap your email (top right) when signed in. It shows your **purchased
