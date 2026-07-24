@@ -24,9 +24,9 @@ const T = {
     reportTitle: "Informe de Propiedad", reportSub: "Todo el estudio de debida diligencia en un solo lugar.",
     includes: "Incluye", unlock: "Desbloquear informe", unlocked: "Informe desbloqueado", oneTime: "pago único",
     proHint: "Gratis con Llave Pro", source: "Fuente", lockedNote: "Desbloquea para ver los resultados verificados.",
-    verified: "Compilado de fuentes oficiales",
+    verified: "Estimaciones ilustrativas — verifica en las fuentes oficiales",
     dataDisc: "La información de esta propiedad proviene de fuentes públicas y de terceros en internet, y puede no reflejar el estado más reciente (precio, disponibilidad o si ya se vendió/alquiló). Verifica siempre directamente con la fuente, el vendedor o el corredor antes de tomar una decisión.",
-    disc: "El informe compila registros públicos. Para certeza legal, solicita las certificaciones oficiales enlazadas. No constituye garantía de título ni asesoría legal.",
+    disc: "Excepto la zona inundable (dato en vivo de FEMA), este informe usa estimaciones ilustrativas mientras conectamos fuentes de datos oficiales para título y contribuciones — no reemplaza una certificación oficial del Registro de la Propiedad o del CRIM. No constituye garantía de título ni asesoría legal.",
     checkout: "Pagar", orCard: "o paga con tarjeta", approved: "¡Pago aprobado!", secure: "Pago cifrado y seguro",
     demo: "Tarjeta en modo demo — sin cargo real (añade tu llave de Stripe para cobrar).", close: "Cerrar",
     goPro: "Hazte Pro — informes ilimitados", proLogin: "Inicia sesión para Pro", payErr: "No se pudo completar el pago.", simulated: "simulado" },
@@ -38,9 +38,9 @@ const T = {
     reportTitle: "Property Report", reportSub: "Your full due-diligence check in one place.",
     includes: "Includes", unlock: "Unlock report", unlocked: "Report unlocked", oneTime: "one-time",
     proHint: "Free with Llave Pro", source: "Source", lockedNote: "Unlock to see the verified results.",
-    verified: "Compiled from official sources",
+    verified: "Illustrative estimates — verify with official sources",
     dataDisc: "Property information is gathered from public and third-party sources on the web and may not reflect the most current status (price, availability, or whether it has already sold or rented). Always verify directly with the source, seller, or agent before making a decision.",
-    disc: "This report compiles public records. For legal certainty, request the official certifications linked. It is not a title guarantee or legal advice.",
+    disc: "Except for the flood zone (live FEMA data), this report currently uses illustrative estimates while we connect official data sources for title and tax records — it does not replace an official certification from the Property Registry or CRIM. It is not a title guarantee or legal advice.",
     checkout: "Checkout", orCard: "or pay with card", approved: "Payment approved!", secure: "Encrypted, secure payment",
     demo: "Card in demo mode — no real charge (add your Stripe key to charge).", close: "Close",
     goPro: "Go Pro — unlimited reports", proLogin: "Sign in for Pro", payErr: "Couldn't complete the payment.", simulated: "simulated" },
@@ -301,8 +301,8 @@ export default function Report({ lang, setLang, user, setUser, onLogin, onLogout
           </div>
 
           {unlocked && (
-            <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 7, color: C.ok }}>
-              <CheckCircle2 size={15} strokeWidth={2.3} /><span className="text-sm" style={{ fontWeight: 700 }}>{t.verified}</span>
+            <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 7, color: C.warn }}>
+              <AlertTriangle size={15} strokeWidth={2.3} /><span className="text-sm" style={{ fontWeight: 700 }}>{t.verified}</span>
             </div>
           )}
           <p className="text-xs" style={{ color: C.sea, marginTop: 14, lineHeight: 1.5, paddingTop: 12, borderTop: `1px solid ${C.sand}` }}>{t.disc}</p>
