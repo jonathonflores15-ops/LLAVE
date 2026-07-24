@@ -16,7 +16,7 @@ export async function floodZone(lat, lng) {
   if (lat == null || lng == null) return null;
   const key = `${(+lat).toFixed(4)},${(+lng).toFixed(4)}`;
   if (CACHE.has(key)) return CACHE.get(key);
-  const url = `https://hazards.fema.gov/gis/nfhl/rest/services/public/NFHL/MapServer/28/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=FLD_ZONE,ZONE_SUBTY&returnGeometry=false&f=json`;
+  const url = `https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=FLD_ZONE,ZONE_SUBTY&returnGeometry=false&f=json`;
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 4500);
   try {
