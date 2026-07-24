@@ -8,7 +8,7 @@ import { api } from "./api.js";
 import PropertiesMap from "./Map.jsx";
 import Assistant from "./Assistant.jsx";
 
-const REGISTRO = "https://ridpr.pr.gov";
+const REGISTRO = "https://karibe.ridpr.pr.gov/client/";
 const CRIM = "https://www.crimpr.net";
 
 const C = {

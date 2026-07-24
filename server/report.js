@@ -52,7 +52,7 @@ export function buildReport(l) {
     },
     {
       icon: "Landmark", es: "Título · Registro de la Propiedad", en: "Title · Property Registry",
-      src: "https://ridpr.pr.gov", srcLabel: { es: "Registro", en: "Registry" },
+      src: "https://karibe.ridpr.pr.gov/client/", srcLabel: { es: "Registro", en: "Registry" },
       rows: [
         isAuction
           ? { es: ["Estado del título", "En proceso de ejecución"], en: ["Title status", "In foreclosure process"], tone: "warn" }

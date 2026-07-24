@@ -242,7 +242,7 @@ export default function Report({ lang, setLang, user, setUser, onLogin, onLogout
             </div>
           )}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <a href="https://ridpr.pr.gov" target="_blank" rel="noopener noreferrer" className="chip-gov"><Landmark size={12} strokeWidth={2.2} /> {t.vTitle} <ArrowUpRight size={11} strokeWidth={2.4} /></a>
+            <a href="https://karibe.ridpr.pr.gov/client/" target="_blank" rel="noopener noreferrer" className="chip-gov"><Landmark size={12} strokeWidth={2.2} /> {t.vTitle} <ArrowUpRight size={11} strokeWidth={2.4} /></a>
             <a href="https://www.crimpr.net" target="_blank" rel="noopener noreferrer" className="chip-gov"><Receipt size={12} strokeWidth={2.2} /> {t.vTax} <ArrowUpRight size={11} strokeWidth={2.4} /></a>
           </div>
           {preview?.teaser && (
