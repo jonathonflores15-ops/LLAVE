@@ -20,6 +20,7 @@ const T = {
   es: { tag: "Bienes raíces de Puerto Rico", signin: "Iniciar sesión", pro: "Pro",
     heroA: "Toda propiedad de la isla,", heroB: "anclada a su número de catastro.",
     heroSub: "Alquiler, venta y subastas — residencial y comercial, con enlace directo al Registro de la Propiedad y al CRIM.",
+    publish: "Publicar propiedad",
     ph: "Municipio, sector o código postal", search: "Buscar", searchingFor: "Resultados para", clear: "Limpiar",
     rent: "Alquiler", sale: "En venta", auction: "Subasta", uAll: "Todos", uRes: "Residencial", uCom: "Comercial",
     fMuni: "Municipio", fPrice: "Precio", fType: "Tipo", showing: "Mostrando", of: "de", results: "propiedades",
@@ -31,6 +32,7 @@ const T = {
   en: { tag: "Puerto Rico real estate", signin: "Sign in", pro: "Pro",
     heroA: "Every property on the island,", heroB: "anchored to its cadastral number.",
     heroSub: "Rentals, sales, and auctions — residential and commercial, with direct links to the Property Registry and CRIM.",
+    publish: "List your property",
     ph: "Municipality, sector, or ZIP code", search: "Search", searchingFor: "Results for", clear: "Clear",
     rent: "Rentals", sale: "For sale", auction: "Auction", uAll: "All", uRes: "Residential", uCom: "Commercial",
     fMuni: "Municipality", fPrice: "Price", fType: "Type", showing: "Showing", of: "of", results: "properties",
@@ -52,7 +54,10 @@ function Card({ item, t, onOpen }) {
       onClick={() => onOpen(item.catastro)}
       onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen(item.catastro))}
       style={{ background: C.card, borderRadius: 16, overflow: "hidden", border: `1px solid ${C.seaLine}`, cursor: "pointer" }}>
-      <div style={{ position: "relative", height: 148, background: `linear-gradient(135deg, ${item.g[0]}, ${item.g[1]})` }}>
+      <div style={{ position: "relative", height: 148, background: `linear-gradient(135deg, ${item.g[0]}, ${item.g[1]})`, overflow: "hidden" }}>
+        {item.photos && item.photos[0] && (
+          <img src={item.photos[0]} alt="" loading="lazy" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+        )}
         <span className="chip-badge" style={{ background: badge.bg, color: badge.fg }}>{badge.label}</span>
         <span className="chip-badge-r" style={{ color: com ? "#3A4A47" : C.teal }}>
           {com ? <Building2 size={12} strokeWidth={2.4} /> : <HomeIcon size={12} strokeWidth={2.4} />}
@@ -154,7 +159,7 @@ function AlertsSignup({ lang, kind, use }) {
   );
 }
 
-export default function Home({ lang, setLang, user, onLogin, onLogout, onOpen, onAccount }) {
+export default function Home({ lang, setLang, user, onLogin, onLogout, onOpen, onAccount, onPublish }) {
   const t = T[lang];
   const [kind, setKind] = useState("sale");
   const [use, setUse] = useState("all");
@@ -213,6 +218,9 @@ export default function Home({ lang, setLang, user, onLogin, onLogout, onOpen, o
               <button className={`langbtn ${lang === "es" ? "on" : ""}`} onClick={() => setLang("es")}>ES</button>
               <button className={`langbtn ${lang === "en" ? "on" : ""}`} onClick={() => setLang("en")}>EN</button>
             </div>
+            <button className="acct" onClick={onPublish} style={{ background: C.coral, borderColor: C.coral }}>
+              <Sparkles size={14} /> {t.publish}
+            </button>
             {user ? (
               <button className="acct" onClick={onAccount} title={user.email}>
                 {user.pro ? <Sparkles size={14} /> : <User size={14} />}

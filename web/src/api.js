@@ -33,4 +33,8 @@ export const api = {
   login: (email, password) => req("/auth/login", { method: "POST", body: { email, password } }),
   me: () => req("/auth/me"),
   myReports: () => req("/me/reports"),
+  submitListing: (payload) => req("/listings/submit", { method: "POST", body: payload }),
+  adminSubmissions: (adminKey) => req("/admin/submissions?adminKey=" + encodeURIComponent(adminKey)),
+  adminApprove: (id, adminKey) => req("/admin/submissions/" + encodeURIComponent(id) + "/approve", { method: "POST", body: { adminKey } }),
+  adminReject: (id, adminKey) => req("/admin/submissions/" + encodeURIComponent(id) + "/reject", { method: "POST", body: { adminKey } }),
 };

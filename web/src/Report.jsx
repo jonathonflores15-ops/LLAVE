@@ -177,7 +177,10 @@ export default function Report({ lang, setLang, user, setUser, onLogin, onLogout
 
       <main style={{ maxWidth: 720, margin: "0 auto", padding: "18px 20px 60px" }}>
         <div style={{ background: C.card, border: `1px solid ${C.seaLine}`, borderRadius: 18, overflow: "hidden" }}>
-          <div style={{ position: "relative", height: 180, background: `linear-gradient(135deg, ${listing.g[0]}, ${listing.g[1]})` }}>
+          <div style={{ position: "relative", height: 180, background: `linear-gradient(135deg, ${listing.g[0]}, ${listing.g[1]})`, overflow: "hidden" }}>
+            {listing.photos && listing.photos[0] && (
+              <img src={listing.photos[0]} alt="" loading="lazy" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+            )}
             <span style={{ position: "absolute", top: 12, left: 14, background: isAuction ? C.coral : "rgba(255,255,255,.94)", color: isAuction ? "#fff" : C.teal, fontSize: 11, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", padding: "3px 9px", borderRadius: 999 }}>{txLabel}</span>
             <span style={{ position: "absolute", top: 12, right: 14, display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,.94)", color: com ? "#3A4A47" : C.teal, fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 999 }}>
               {com ? <Building2 size={12} strokeWidth={2.4} /> : <HomeIcon size={12} strokeWidth={2.4} />} {com ? t.com : t.res}
@@ -206,6 +209,14 @@ export default function Report({ lang, setLang, user, setUser, onLogin, onLogout
             </div>
           </div>
         </div>
+
+        {listing.photos && listing.photos.length > 1 && (
+          <div style={{ display: "flex", gap: 8, marginTop: 10, overflowX: "auto" }}>
+            {listing.photos.slice(1).map((p, i) => (
+              <img key={i} src={p} alt="" loading="lazy" style={{ width: 100, height: 74, borderRadius: 10, objectFit: "cover", flexShrink: 0, border: `1px solid ${C.seaLine}` }} />
+            ))}
+          </div>
+        )}
 
         {listing.lat && listing.lng && (
           <div style={{ marginTop: 14 }}>

@@ -21,7 +21,10 @@ const APP_URL = process.env.APP_URL || "http://localhost:5173";
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "20mb" })); // generous limit — submitted listing photos travel as base64
+
+const MAX_PHOTOS = 6;
+const MAX_PHOTO_CHARS = 2_500_000; // ~1.8MB per photo, decoded
 
 const publicUser = (u) => ({ id: u.id, email: u.email, pro: !!u.pro });
 const allListings = () => [...LISTINGS, ...db.extraListings];
@@ -58,6 +61,44 @@ app.get("/api/listings/:id", (req, res) => {
   const l = findListing(req.params.id);
   if (!l) return res.status(404).json({ error: "listing_not_found" });
   res.json(l);
+});
+
+// ---- public listing submissions (owners/agents publish their own property) ----
+app.post("/api/listings/submit", (req, res) => {
+  const b = req.body || {};
+  const catastro = String(b.catastro || "").trim();
+  const muni = String(b.muni || "").trim();
+  const email = String(b.contactEmail || "").trim().toLowerCase();
+  if (!["rent", "sale", "auction"].includes(b.kind)) return res.status(400).json({ error: "invalid_kind" });
+  if (!catastro) return res.status(400).json({ error: "catastro_required" });
+  if (!muni) return res.status(400).json({ error: "muni_required" });
+  if (!/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ error: "valid_email_required" });
+
+  const photos = Array.isArray(b.photos)
+    ? b.photos.filter((p) => typeof p === "string" && p.startsWith("data:image/") && p.length <= MAX_PHOTO_CHARS).slice(0, MAX_PHOTOS)
+    : [];
+
+  const submission = {
+    id: "sub_" + crypto.randomUUID(),
+    status: "pending",
+    kind: b.kind, use: b.use === "com" ? "com" : "res",
+    muni, sector: String(b.sector || ""), type: String(b.type || ""),
+    beds: b.beds ? Number(b.beds) : undefined,
+    baths: b.baths ? Number(b.baths) : undefined,
+    area: b.area ? Number(b.area) : undefined,
+    parking: b.parking ? Number(b.parking) : undefined,
+    price: b.price ? Number(b.price) : undefined,
+    bid: b.bid ? Number(b.bid) : undefined,
+    catastro, zip: String(b.zip || ""),
+    lat: b.lat ? Number(b.lat) : undefined,
+    lng: b.lng ? Number(b.lng) : undefined,
+    photos,
+    description: String(b.description || "").slice(0, 2000),
+    contactEmail: email, contactPhone: String(b.contactPhone || ""),
+    createdAt: Date.now(),
+  };
+  db.submissions.push(submission); db.save();
+  res.json({ ok: true, id: submission.id });
 });
 
 // ---- report (paywalled) ----
@@ -223,6 +264,40 @@ app.post("/api/admin/listings", async (req, res) => {
   db.extraListings.push(listing); db.save();
   const notified = await notifyNewListings([listing]);
   res.json({ ok: true, listing, notified });
+});
+
+// Admin: list pending owner-submitted listings awaiting review.
+app.get("/api/admin/submissions", (req, res) => {
+  if ((req.query.adminKey || req.get("x-admin-key")) !== ADMIN_KEY) return res.status(401).json({ error: "bad_admin_key" });
+  res.json({ submissions: db.submissions.filter((s) => s.status === "pending") });
+});
+
+// Admin: approve a submission -> it becomes a real listing and notifies matching subscribers.
+app.post("/api/admin/submissions/:id/approve", async (req, res) => {
+  if ((req.body.adminKey || req.get("x-admin-key")) !== ADMIN_KEY) return res.status(401).json({ error: "bad_admin_key" });
+  const sub = db.submissions.find((s) => s.id === req.params.id && s.status === "pending");
+  if (!sub) return res.status(404).json({ error: "submission_not_found" });
+  const listing = {
+    id: "x_" + crypto.randomUUID().slice(0, 8), kind: sub.kind, muni: sub.muni, sector: sub.sector,
+    type: sub.type || "Propiedad", use: sub.use,
+    beds: sub.beds, baths: sub.baths, area: sub.area, parking: sub.parking,
+    price: sub.price, bid: sub.bid, catastro: sub.catastro, zip: sub.zip, lat: sub.lat, lng: sub.lng,
+    photos: sub.photos, g: ["#0C4A4E", "#6FA093"], createdAt: Date.now(),
+  };
+  db.extraListings.push(listing);
+  sub.status = "approved";
+  db.save();
+  const notified = await notifyNewListings([listing]);
+  res.json({ ok: true, listing, notified });
+});
+
+// Admin: reject a submission.
+app.post("/api/admin/submissions/:id/reject", (req, res) => {
+  if ((req.body.adminKey || req.get("x-admin-key")) !== ADMIN_KEY) return res.status(401).json({ error: "bad_admin_key" });
+  const sub = db.submissions.find((s) => s.id === req.params.id && s.status === "pending");
+  if (!sub) return res.status(404).json({ error: "submission_not_found" });
+  sub.status = "rejected"; db.save();
+  res.json({ ok: true });
 });
 
 // Admin: send the digest of recent matching listings to every subscriber.
