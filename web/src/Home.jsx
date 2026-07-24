@@ -26,7 +26,8 @@ const T = {
     list: "Lista", map: "Mapa", perMo: "/mes", bid: "Puja inicial", cat: "Catastro", vTitle: "Título · Registro", vTax: "Contribuciones · CRIM",
     loading: "Cargando propiedades…", none: "No hay propiedades para esta búsqueda.",
     errTitle: "No se pudo conectar con el servidor", errBody: "Asegúrate de que el backend esté corriendo (carpeta server: npm start).",
-    trust: "Cada propiedad enlaza al Registro y al CRIM." },
+    trust: "Cada propiedad enlaza al Registro y al CRIM.",
+    dataDisc: "La información de las propiedades proviene de fuentes públicas y de terceros en internet, y puede no reflejar el estado más reciente (precio, disponibilidad o si ya se vendió/alquiló). Verifica siempre directamente con la fuente, el vendedor o el corredor antes de tomar una decisión." },
   en: { tag: "Puerto Rico real estate", signin: "Sign in", pro: "Pro",
     heroA: "Every property on the island,", heroB: "anchored to its cadastral number.",
     heroSub: "Rentals, sales, and auctions — residential and commercial, with direct links to the Property Registry and CRIM.",
@@ -36,7 +37,8 @@ const T = {
     list: "List", map: "Map", perMo: "/mo", bid: "Starting bid", cat: "Cadastre", vTitle: "Title · Registry", vTax: "Taxes · CRIM",
     loading: "Loading properties…", none: "No properties for this search.",
     errTitle: "Couldn't reach the server", errBody: "Make sure the backend is running (server folder: npm start).",
-    trust: "Every property links to the Registry and CRIM." },
+    trust: "Every property links to the Registry and CRIM.",
+    dataDisc: "Property information is gathered from public and third-party sources on the web and may not reflect the most current status (price, availability, or whether it has already sold or rented). Always verify directly with the source, seller, or agent before making a decision." },
 };
 
 const money = (n) => "$" + Number(n).toLocaleString("en-US");
@@ -91,8 +93,12 @@ function Card({ item, t, onOpen }) {
         </div>
         <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px dashed ${C.seaLine}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-            <span className="text-xs" style={{ color: C.sea, fontWeight: 600 }}>{t.cat}</span>
-            <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 13, fontWeight: 600, background: C.sand, padding: "2px 8px", borderRadius: 6, border: `1px solid ${C.sandDeep}` }}>{item.catastro}</span>
+            {item.kind !== "rent" && (
+              <>
+                <span className="text-xs" style={{ color: C.sea, fontWeight: 600 }}>{t.cat}</span>
+                <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 13, fontWeight: 600, background: C.sand, padding: "2px 8px", borderRadius: 6, border: `1px solid ${C.sandDeep}` }}>{item.catastro}</span>
+              </>
+            )}
             {item.zip && <span className="text-xs" style={{ color: C.sea, fontWeight: 600 }}>· ZIP {item.zip}</span>}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }} onClick={(e) => e.stopPropagation()}>
@@ -308,6 +314,8 @@ export default function Home({ lang, setLang, user, onLogin, onLogout, onOpen, o
         )}
 
         <AlertsSignup lang={lang} kind={kind} use={use} />
+
+        <p className="text-xs" style={{ color: C.sea, marginTop: 30, paddingTop: 16, borderTop: `1px solid ${C.seaLine}`, lineHeight: 1.6, maxWidth: 720 }}>{t.dataDisc}</p>
       </main>
     </div>
   );

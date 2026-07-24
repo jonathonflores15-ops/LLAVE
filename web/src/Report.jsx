@@ -24,6 +24,7 @@ const T = {
     includes: "Incluye", unlock: "Desbloquear informe", unlocked: "Informe desbloqueado", oneTime: "pago único",
     proHint: "Gratis con Llave Pro", source: "Fuente", lockedNote: "Desbloquea para ver los resultados verificados.",
     verified: "Compilado de fuentes oficiales",
+    dataDisc: "La información de esta propiedad proviene de fuentes públicas y de terceros en internet, y puede no reflejar el estado más reciente (precio, disponibilidad o si ya se vendió/alquiló). Verifica siempre directamente con la fuente, el vendedor o el corredor antes de tomar una decisión.",
     disc: "El informe compila registros públicos. Para certeza legal, solicita las certificaciones oficiales enlazadas. No constituye garantía de título ni asesoría legal.",
     checkout: "Pagar", orCard: "o paga con tarjeta", approved: "¡Pago aprobado!", secure: "Pago cifrado y seguro",
     demo: "Tarjeta en modo demo — sin cargo real (añade tu llave de Stripe para cobrar).", close: "Cerrar",
@@ -36,6 +37,7 @@ const T = {
     includes: "Includes", unlock: "Unlock report", unlocked: "Report unlocked", oneTime: "one-time",
     proHint: "Free with Llave Pro", source: "Source", lockedNote: "Unlock to see the verified results.",
     verified: "Compiled from official sources",
+    dataDisc: "Property information is gathered from public and third-party sources on the web and may not reflect the most current status (price, availability, or whether it has already sold or rented). Always verify directly with the source, seller, or agent before making a decision.",
     disc: "This report compiles public records. For legal certainty, request the official certifications linked. It is not a title guarantee or legal advice.",
     checkout: "Checkout", orCard: "or pay with card", approved: "Payment approved!", secure: "Encrypted, secure payment",
     demo: "Card in demo mode — no real charge (add your Stripe key to charge).", close: "Close",
@@ -218,14 +220,17 @@ export default function Report({ lang, setLang, user, setUser, onLogin, onLogout
             <span style={{ background: "#DFF0E7", color: C.ok, fontSize: 11, fontWeight: 800, letterSpacing: ".04em", textTransform: "uppercase", padding: "2px 8px", borderRadius: 999 }}>{t.freeTag}</span>
           </div>
           <p className="text-sm" style={{ color: C.slate, marginBottom: 12 }}>{t.freeSub}</p>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
-            <span className="text-xs" style={{ color: C.sea, fontWeight: 600 }}>{t.cat}</span>
-            <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 13, fontWeight: 600, background: C.sand, padding: "2px 8px", borderRadius: 6, border: `1px solid ${C.sandDeep}` }}>{listing.catastro}</span>
-          </div>
+          {listing.kind !== "rent" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+              <span className="text-xs" style={{ color: C.sea, fontWeight: 600 }}>{t.cat}</span>
+              <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 13, fontWeight: 600, background: C.sand, padding: "2px 8px", borderRadius: 6, border: `1px solid ${C.sandDeep}` }}>{listing.catastro}</span>
+            </div>
+          )}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             <a href="https://ridpr.pr.gov" target="_blank" rel="noopener noreferrer" className="chip-gov"><Landmark size={12} strokeWidth={2.2} /> {t.vTitle} <ArrowUpRight size={11} strokeWidth={2.4} /></a>
             <a href="https://www.crimpr.net" target="_blank" rel="noopener noreferrer" className="chip-gov"><Receipt size={12} strokeWidth={2.2} /> {t.vTax} <ArrowUpRight size={11} strokeWidth={2.4} /></a>
           </div>
+          <p className="text-xs" style={{ color: C.sea, marginTop: 12, lineHeight: 1.5 }}>{t.dataDisc}</p>
         </div>
 
         <div style={{ background: C.white, border: `1.5px solid ${unlocked ? C.ok : C.teal}`, borderRadius: 18, padding: "18px", marginTop: 14, boxShadow: "0 10px 30px -18px rgba(12,74,78,.5)" }}>

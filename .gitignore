@@ -2,6 +2,8 @@ node_modules
 web/node_modules
 server/node_modules
 web/dist
-.git
-*.log
+server/data.json
+server/outbox.log
 .env
+.env.local
+*.log
