@@ -13,6 +13,8 @@ services:
       - key: ADMIN_KEY
         generateValue: true
       # Fill these in the Render dashboard after the first deploy:
+      - key: DATABASE_URL
+        sync: false            # a free Neon Postgres connection string — without this, data resets on every restart
       - key: APP_URL
         sync: false            # e.g. https://llave.onrender.com
       - key: STRIPE_SECRET_KEY

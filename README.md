@@ -82,12 +82,20 @@ That's it — your app is live. `JWT_SECRET` and `ADMIN_KEY` are auto-generated.
 2. In Render → Environment, add `RESEND_API_KEY` and `FROM_EMAIL` (an address on your verified
    domain). Alerts now send for real.
 
-## ⚠️ One important note about data on the free tier
-This app stores data in a file (`server/data.json`). Free hosting tiers use temporary disks,
-so **accounts, orders, and subscribers reset when the service restarts or redeploys.** Fine for
-testing. For production, either add a **persistent disk** (Render offers this on paid plans) or
-swap the file store for a hosted database. It's an easy change — all storage lives in
-`server/db.js`.
+## Step 6 — Turn on real, persistent data storage
+Without this, the app stores data in a file (`server/data.json`) that **resets every time the
+service restarts or redeploys** — fine for a quick demo, not fine for anything real (accounts,
+paid reports, and listing submissions would all vanish).
+
+1. Create a free account at **https://neon.com** (no credit card, free tier never expires) and
+   make a new project. Copy its connection string (starts with `postgresql://...`).
+2. In Render → your service → **Environment**, add `DATABASE_URL` with that connection string.
+3. Save, rebuild, and deploy. The server logs `Database: Postgres (persistent)` on startup once
+   it's wired up correctly — check the Logs tab to confirm.
+
+No code changes needed beyond this — `server/db.js` automatically switches from the local file
+to Postgres whenever `DATABASE_URL` is set, and everything else in the app (accounts, orders,
+subscribers, listings, submissions) keeps working exactly the same.
 
 ---
 
